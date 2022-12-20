@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify, make_response
 from constants import CLIENT_ID, CLIENT_SECRET
-from recommender import recommend_video
+from recommender import recommend_video_based_on_video_score as recommend_video
 
 app = Flask(__name__)
 

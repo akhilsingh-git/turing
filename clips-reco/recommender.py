@@ -1,46 +1,57 @@
-import pickle
-from collections import defaultdict
-from bipart_model import user_nodes, stream_nodes
+#Model Prediction
+import time
 import networkx as nx
+from collections import defaultdict
+import pickle
 
-G = pickle.load(open("network.sav", 'rb'))
+G = pickle.load(open("network_all.sav", 'rb'))
+score = pickle.load(open("video_score_matrix.sav", 'rb'))
 
-def get_nodes_from_partition(G, partition):
-    nodes = []
-    for n in G.nodes():
-        if G.nodes[n]['bipartite'] == partition:
-            nodes.append(n)
+def giveVideoMaxScore(a):
+    return (score[a]['Maxscore'])
     
-    return nodes
+def recommend_video_based_on_video_score_page(to_user,start_from=0):
+    video_in_page = 100
+    initial =time.time()
+    prev_watched_videos = list(set(G.neighbors(to_user)))
+    prev_watched_videos.sort(key=giveVideoMaxScore)
+    recommended_videos = {}
+    for video in prev_watched_videos[:100]:
+        for video_to_add in list(score[video].keys()):
+            try:
+                recommended_videos[video_to_add]=max(recommended_videos[video_to_add],score[video][video_to_add])
+            except:
+                recommended_videos[video_to_add]=score[video][video_to_add]
+    for video in prev_watched_videos:
+        recommended_videos[video] = -1
+    recommended_videos['Maxscore'] = -1
+    sorted_recommended_video = sorted(recommended_videos.items(), key=lambda x:-x[1])
+    print("time for execution"+str(time.time()-initial))
+    #for all video comment out this line
+    # return(sorted_recommended_video)
+    #for pagination return code change video in page to control videos in a page
+    return(sorted_recommended_video[start_from:start_from + video_in_page])
 
-def shared_partition_nodes(node1, node2):
-    assert G.nodes[node1]['bipartite'] == G.nodes[node2]['bipartite']
-    nbrs1 = G.neighbors(node1)
-    nbrs2 = G.neighbors(node2)
-    overlap = set(nbrs1).intersection(nbrs2)
-    return overlap
+def recommend_video_based_on_video_score(to_user,start_from=0):
+    video_in_page = 100
+    initial =time.time()
+    prev_watched_videos = list(set(G.neighbors(to_user)))
+    prev_watched_videos.sort(key=giveVideoMaxScore)
+    recommended_videos = {}
+    for video in prev_watched_videos[:100]:
+        for video_to_add in list(score[video].keys()):
+            try:
+                recommended_videos[video_to_add]=max(recommended_videos[video_to_add],score[video][video_to_add])
+            except:
+                recommended_videos[video_to_add]=score[video][video_to_add]
+    for video in prev_watched_videos:
+        recommended_videos[video] = -1
+    recommended_videos['Maxscore'] = -1
+    sorted_recommended_video = sorted(recommended_videos.items(), key=lambda x:-x[1])
+    print("time for execution"+str(time.time()-initial))
+    #for all video comment out this line
+    return(sorted_recommended_video)
+  
 
-def user_similarity( user1, user2):
-    assert G.nodes[user1]['bipartite'] == 'Users'
-    assert G.nodes[user2]['bipartite'] == 'Users'
-    shared_nodes = shared_partition_nodes(user1, user2)
-    return len(shared_nodes) / len(stream_nodes)
 
-def most_similar_users(user):
-    assert G.nodes[user]['bipartite'] == 'Users'
-    user_node = set(user_nodes)
-    user_node.remove(user)
-    similarities = defaultdict(list)
-    for n in user_node:
-        similarity = user_similarity(user, n)
-        similarities[similarity].append(n)
-    max_similarity = max(similarities.keys())
-    return similarities[max_similarity]
-
-def recommend_video(from_user):
-    from_streamers = set(G.neighbors(from_user))
-    video_id = set()
-    for to_user in most_similar_users(from_user):
-        to_streamers = set(G.neighbors(to_user))
-        video_id.update(from_streamers.difference(to_streamers))
-    return(list(video_id))
+  
