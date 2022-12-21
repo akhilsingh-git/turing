@@ -1,2 +1,4 @@
 venv
 *.pyc
+*.sav
+.DS_STORE
