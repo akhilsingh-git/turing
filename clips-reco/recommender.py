@@ -3,9 +3,14 @@ import time
 import networkx as nx
 from collections import defaultdict
 import pickle
+import boto3
 
-G = pickle.load(open("network_all.sav", 'rb'))
-score = pickle.load(open("video_score_matrix.sav", 'rb'))
+
+s3 = boto3.resource('s3')
+G = pickle.loads(s3.Bucket("mlmodelrecommender").Object("clip/network_all.sav").get()['Body'].read())
+score = pickle.loads(s3.Bucket("mlmodelrecommender").Object("clip/video_score_matrix.sav").get()['Body'].read())
+
+
 
 def giveVideoMaxScore(a):
     return (score[a]['Maxscore'])
