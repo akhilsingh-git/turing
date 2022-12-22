@@ -1,4 +1,8 @@
-import time
+"""
+Note: Need to have required models in the /recommenders/models/ directory in the codebase 
+to run.
+"""
+import os
 import pickle
 
 # Todo: Rename me for better context
@@ -12,10 +16,12 @@ def init_clips_models():
     global G
     global ScoreMatrix
 
-    with open("/home/loco/turing/recommenders/models/network_all.sav", "rb") as f:
+    models_dir = os.path.join(os.getcwd(), "recommenders", "models")
+
+    with open(os.path.join(models_dir, "network_all.sav"), "rb") as f:
         G = pickle.load(f)
 
-    with open("/home/loco/turing/recommenders/models/video_score_matrix.sav", "rb") as f:
+    with open(os.path.join(models_dir, "video_score_matrix.sav"), "rb") as f:
         ScoreMatrix = pickle.load(f)
 
 

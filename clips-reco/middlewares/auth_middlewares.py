@@ -3,6 +3,9 @@ from flask import request, current_app as app, abort
 
 
 def internal_auth_required(f):
+    """
+    Decorator to be used in endpoints which are used by internal loco services. 
+    """
     @wraps(f)
     def decorated(*args, **kwargs):
         client_id = request.headers.get('X-CLIENT-ID')
