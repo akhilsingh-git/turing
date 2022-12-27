@@ -1,13 +1,13 @@
 apiVersion: autoscaling/v1
 kind: HorizontalPodAutoscaler
 metadata:
-  name: turing-api-dp-cpu
-  namespace: turing-ns
+  name: clips-reco-cpu
+  namespace: ivory
 spec:
   maxReplicas: 20
   minReplicas: 2
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: turing-api-dp
+    name: clips-reco
   targetCPUUtilizationPercentage: 60
