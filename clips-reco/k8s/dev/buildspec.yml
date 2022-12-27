@@ -5,7 +5,7 @@ phases:
     commands:
       # build tags
       - TAG="dev.$(date +%Y-%m-%d.%H.%M.%S)"
-      - sed -i 's@CONTAINER_IMAGE@'"$REPOSITORY_URI:$TAG"'@' k8s/dev/deployment.yaml
+      - sed -i 's@CONTAINER_IMAGE@'"$REPOSITORY_URI:$TAG"'@' clips-reco/k8s/dev/deployment.yaml
 
       # retrieve an authentication token and authenticate your docker client to ecr
       - aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
@@ -15,19 +15,20 @@ phases:
   build:
     commands:
       # Create a docker image
-      - docker build -t turing --build-arg aws_access_key=$AWS_ACCESS_KEY_ID --build-arg aws_access_secret=$AWS_SECRET_ACCESS_KEY -f k8s/Dockerfile .
+      - docker build -t turing --build-arg aws_access_key=$AWS_ACCESS_KEY_ID --build-arg aws_access_secret=$AWS_SECRET_ACCESS_KEY -f clips-reco/k8s/Dockerfile .
     on-failure: ABORT
 
   post_build:
     commands:
       # push to ecr
-      - docker tag turing:latest $REPOSITORY_URI:$TAG
+      - docker tag clips-reco:latest $REPOSITORY_URI:$TAG
       - docker push $REPOSITORY_URI:$TAG
 
       # setup kubectl and apply
       - aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $AWS_DEFAULT_REGION
-      - kubectl apply -f k8s/dev/fluentbit-config.yml
-      - kubectl apply -f k8s/dev/deployment.yml
-      - kubectl apply -f k8s/dev/hpa.yml
-      - kubectl rollout restart deployment/turing
-      - kubectl rollout restart deployment/turing
+      - kubectl apply -f k8s/dev/ingress.yml
+      - kubectl apply -f clips-reco/k8s/dev/fluentbit-config.yml
+      - kubectl apply -f clips-reco/k8s/dev/deployment.yml
+      - kubectl apply -f clips-reco/k8s/dev/hpa.yml
+      - kubectl rollout restart deployment/clips-reco
+      - kubectl rollout restart deployment/clips-reco
