@@ -41,4 +41,4 @@ WORKDIR /home/loco/turing/
 COPY . .
 
 # CMD flask run --host 0.0.0.0 --port 80
-CMD flask run --host 0.0.0.0 --port 80
+CMD flask run --port 80
