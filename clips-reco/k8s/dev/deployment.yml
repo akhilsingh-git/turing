@@ -10,7 +10,7 @@ spec:
       protocol: TCP
       targetPort: 80
   selector:
-    app: clips-reco
+    name: clips-reco
   sessionAffinity: None
   type: ClusterIP
 ---
