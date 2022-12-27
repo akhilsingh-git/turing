@@ -36,7 +36,7 @@ spec:
       nodeSelector:
         eks.amazonaws.com/nodegroup: api-dev
       containers:
-        - name: turing
+        - name: clips
           image: CONTAINER_IMAGE
           imagePullPolicy: Always
           env:
