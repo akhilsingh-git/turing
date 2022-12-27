@@ -40,4 +40,5 @@ RUN aws s3 cp s3://mlmodelrecommender/clip/network_all.sav /home/loco/turing/rec
 WORKDIR /home/loco/turing/
 COPY . .
 
+# CMD flask run --host 0.0.0.0 --port 80
 CMD flask run --host 0.0.0.0 --port 80
