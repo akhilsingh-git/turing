@@ -5,7 +5,7 @@ phases:
     commands:
       # build tags
       - TAG="dev.$(date +%Y-%m-%d.%H.%M.%S)"
-      - sed -i 's@CONTAINER_IMAGE@'"$REPOSITORY_URI:$TAG"'@' clips-reco/k8s/dev/deployment.yaml
+      - sed -i 's@CONTAINER_IMAGE@'"$REPOSITORY_URI:$TAG"'@' clips-reco/k8s/dev/deployment.yml
 
       # retrieve an authentication token and authenticate your docker client to ecr
       - aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
