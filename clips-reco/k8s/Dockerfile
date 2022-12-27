@@ -15,7 +15,7 @@ RUN pip install pipenv
 COPY requirements.txt .
 RUN pipenv install -r requirements.txt
 RUN pipenv install --system --skip-lock
-RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o "awscliv2.zip"
 RUN unzip awscliv2.zip
 RUN ./aws/install
 
