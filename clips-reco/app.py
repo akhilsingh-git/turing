@@ -68,7 +68,7 @@ def get_recommended_clips():
     return make_response(jsonify(data=data), 200)
 
 @app.route("/health/", methods=["GET"])
-def get_recommended_clips():
+def get_health():
     data = {
         "message": "health"
     }

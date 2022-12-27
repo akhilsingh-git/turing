@@ -47,11 +47,11 @@ spec:
               containerPort: 80
           resources:
             requests:
-              memory: 1Gi
-              cpu: 1000m
+              memory: 4Gi
+              cpu: 2000m
             limits:
-              memory: 2Gi
-              cpu: 1000m
+              memory: 4Gi
+              cpu: 2000m
           volumeMounts:
             - name: turing-log
               mountPath: /home/loco/logs/
