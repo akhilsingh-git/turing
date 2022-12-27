@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
     name: turing-fluentbit-cm
-    namespace: turing-ns
+    namespace: ivory
 data:
     fluent-bit.conf: |-
         [SERVICE]
