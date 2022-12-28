@@ -1,8 +1,7 @@
 apiVersion: autoscaling/v1
 kind: HorizontalPodAutoscaler
 metadata:
-  name: clips-reco-cpu
-  namespace: ivory
+  name: turing-cpu
 spec:
   maxReplicas: 20
   minReplicas: 2

@@ -15,7 +15,7 @@ RUN pip install pipenv
 COPY requirements.txt .
 RUN pipenv install -r requirements.txt
 RUN pipenv install --system --skip-lock
-RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o "awscliv2.zip"
 RUN unzip awscliv2.zip
 RUN ./aws/install
 
@@ -25,7 +25,6 @@ ENV AWS_ACCESS_KEY_ID=$aws_access_key
 ENV AWS_SECRET_ACCESS_KEY=$aws_access_secret
 ENV LOG_FILE_PATH=/home/loco/logs/turing.log
 
-EXPOSE 80
 
 RUN useradd --create-home --shell /bin/bash loco
 USER loco
@@ -40,4 +39,7 @@ RUN aws s3 cp s3://mlmodelrecommender/clip/network_all.sav /home/loco/turing/rec
 WORKDIR /home/loco/turing/
 COPY . .
 
-CMD flask run --host 0.0.0.0 --port 80
+EXPOSE 3000
+CMD flask run --host 0.0.0.0 --port 3000
+# CMD flask run --port 80
+# entrypoint ["tail", "-f", "/dev/null"]
