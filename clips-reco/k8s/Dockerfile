@@ -25,7 +25,6 @@ ENV AWS_ACCESS_KEY_ID=$aws_access_key
 ENV AWS_SECRET_ACCESS_KEY=$aws_access_secret
 ENV LOG_FILE_PATH=/home/loco/logs/turing.log
 
-EXPOSE 80
 
 RUN useradd --create-home --shell /bin/bash loco
 USER loco
@@ -40,6 +39,7 @@ RUN aws s3 cp s3://mlmodelrecommender/clip/network_all.sav /home/loco/turing/rec
 WORKDIR /home/loco/turing/
 COPY . .
 
-# CMD flask run --host 0.0.0.0 --port 80
+EXPOSE 3000
+CMD flask run --host 0.0.0.0 --port 3000
 # CMD flask run --port 80
-entrypoint ["tail", "-f", "/dev/null"]
+# entrypoint ["tail", "-f", "/dev/null"]
