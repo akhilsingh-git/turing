@@ -8,7 +8,7 @@ spec:
     - name: http
       port: 80
       protocol: TCP
-      targetPort: 80
+      targetPort: 3000
   selector:
     name: clips-reco
   sessionAffinity: None
@@ -44,7 +44,7 @@ spec:
               value: "API_SERVER"
           ports:
             - name: http
-              containerPort: 80
+              containerPort: 3000
           resources:
             requests:
               memory: 4Gi
