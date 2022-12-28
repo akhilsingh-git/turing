@@ -1,2 +1,6 @@
 venv
 *.pyc
+*.sav
+.DS_STORE
+__pycache__
+app.log

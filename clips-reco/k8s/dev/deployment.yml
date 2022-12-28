@@ -1,0 +1,102 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: clips-reco
+spec:
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 3000
+  selector:
+    name: clips-reco
+  sessionAffinity: None
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: clips-reco
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: clips-reco
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        name: clips-reco
+    spec:
+      nodeSelector:
+        eks.amazonaws.com/nodegroup: api-dev
+      containers:
+        - name: clips
+          image: CONTAINER_IMAGE
+          imagePullPolicy: Always
+          env:
+            - name: SERVICE_ROLE
+              value: "API_SERVER"
+          ports:
+            - name: http
+              containerPort: 3000
+          resources:
+            requests:
+              memory: 4Gi
+              cpu: 2000m
+            limits:
+              memory: 4Gi
+              cpu: 2000m
+          volumeMounts:
+            - name: turing-log
+              mountPath: /home/loco/logs/
+        - name: fluentbit
+          image: 418915376963.dkr.ecr.ap-south-1.amazonaws.com/redis-fluentbit:latest
+          imagePullPolicy: Always
+          env:
+            - name: MY_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: MY_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: MY_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: MY_POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: WORKLOAD_NAME
+              value: "dev_clips_reco"
+            - name: ENVIRONMENT
+              value: "dev"
+          resources:
+            requests:
+              cpu: 100m
+            limits:
+              cpu: 200m
+          volumeMounts:
+            - name: turing-log
+              mountPath: /home/loco/logs/
+            - name: config
+              mountPath: /fluent-bit/etc/fluent-bit.conf
+              subPath: fluent-bit.conf
+            - name: config
+              mountPath: /fluent-bit/etc/turing_parser.conf
+              subPath: turing_parser.conf
+      volumes:
+        - name: turing-log
+          emptyDir: {}
+        - name: config
+          configMap:
+            name: turing-fluentbit-cm
+            defaultMode: 420
