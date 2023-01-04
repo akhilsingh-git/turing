@@ -27,17 +27,17 @@ ENV LOG_FILE_PATH=/home/loco/logs/turing.log
 
 # -------------------------------------------------------
 # Todo: This is for POC purposes. Needs to be dynamic from S3 head call.
-ENV video_score_matrix_model_date 2023_1_3
-ENV video_score_matrix_model_type pydict
-ENV video_score_matrix_model_arch v1
-ENV video_score_matrix_model_archive_name video_score_matrix-pydict-v1-2023_1_3
-ENV video_score_matrix_model_content video_score_matrix
+ENV video_score_matrix_model_date=2023_1_3
+ENV video_score_matrix_model_type=pydict
+ENV video_score_matrix_model_arch=v1
+ENV video_score_matrix_model_archive_name=video_score_matrix-pydict-v1-2023_1_3
+ENV video_score_matrix_model_content=video_score_matrix
 
-ENV watch_history_graph_model_date 2023_1_3
-ENV watch_history_graph_model_type networkx
-ENV watch_history_graph_model_arch v1
-ENV watch_history_graph_model_archive_name watch_history_graph-networkx-v1-2023_1_3
-ENV watch_history_graph_model_content watch_history_graph
+ENV watch_history_graph_model_date=2023_1_3
+ENV watch_history_graph_model_type=networkx
+ENV watch_history_graph_model_arch=v1
+ENV watch_history_graph_model_archive_name=watch_history_graph-networkx-v1-2023_1_3
+ENV watch_history_graph_model_content=watch_history_graph
 # -------------------------------------------------------
 
 RUN useradd --create-home --shell /bin/bash loco
