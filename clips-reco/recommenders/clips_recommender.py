@@ -22,7 +22,7 @@ def init_clips_models():
 
     models_dir = os.path.join(os.getcwd(), "recommenders", "models")
 
-    with open(os.path.join(models_dir, "network_all.sav"), "rb") as f:
+    with open(os.path.join(models_dir, "watch_history_graph.sav"), "rb") as f:
         G = pickle.load(f)
 
     with open(os.path.join(models_dir, "video_score_matrix.sav"), "rb") as f:

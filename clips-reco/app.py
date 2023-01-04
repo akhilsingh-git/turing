@@ -9,11 +9,9 @@ from recommenders.clips_recommender import init_clips_models, get_all_recommende
 from error_handlers import unauthorized_request_handler, bad_request_handler
 from middlewares.auth_middlewares import internal_auth_required
 
-from env import LOG_FILE_PATH
-
 formatter = jsonlogger.JsonFormatter()
 
-log_handler = WatchedFileHandler(LOG_FILE_PATH)
+log_handler = WatchedFileHandler(env.LOG_FILE_PATH)
 log_handler.setFormatter(formatter)
 
 app_logger = logging.getLogger()
@@ -31,6 +29,7 @@ app = Flask(__name__)
 
 app.config["CLIENT_ID"] = env.CLIENT_ID
 app.config["CLIENT_SECRET"] = env.CLIENT_SECRET
+app.config["MODELS_METADATA_RESPONSE"] = env.MODELS_METADATA_RESPONSE
 
 app.register_error_handler(401, unauthorized_request_handler)
 app.register_error_handler(400, bad_request_handler)
@@ -39,7 +38,6 @@ app.register_error_handler(400, bad_request_handler)
 @app.route("/api/v1/clips/", methods=["GET"])
 @internal_auth_required
 def get_recommended_clips():
-    app_logger.info("reached get_recommended_clips")
     query_params = request.args
     user_id = query_params.get("user_id")
 
@@ -62,10 +60,12 @@ def get_recommended_clips():
         app_logger.error(msg=str(e))
 
     data = {
+        "models_metadata": app.config["MODELS_METADATA_RESPONSE"],
         "clip_uids": recommended_clips
     }
 
     return make_response(jsonify(data=data), 200)
+
 
 @app.route("/health/", methods=["GET"])
 def get_health():
@@ -74,6 +74,7 @@ def get_health():
     }
 
     return make_response(jsonify(data=data), 200)
+
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', debug=False)
