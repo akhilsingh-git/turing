@@ -30,4 +30,3 @@ phases:
       - kubectl apply -f k8s/prod/deployment.yml
       - kubectl apply -f k8s/prod/hpa.yml
       - kubectl rollout restart deployment/clips-reco -n ivory
-      - kubectl rollout restart deployment/clips-reco -n ivory
