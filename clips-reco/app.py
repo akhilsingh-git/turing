@@ -1,9 +1,10 @@
 import env
 import time
 import logging
+from datetime import datetime
 from pythonjsonlogger import jsonlogger
 from logging.handlers import WatchedFileHandler
-from flask import Flask, current_app as app, request, jsonify, make_response, abort
+from flask import Flask, current_app, request, jsonify, make_response, abort, g as app_ctx
 
 from recommenders.clips_recommender import init_clips_models, get_all_recommended_clips
 from error_handlers import unauthorized_request_handler, bad_request_handler
@@ -14,16 +15,13 @@ formatter = jsonlogger.JsonFormatter()
 log_handler = WatchedFileHandler(env.LOG_FILE_PATH)
 log_handler.setFormatter(formatter)
 
-app_logger = logging.getLogger()
-app_logger.addHandler(log_handler)
-app_logger.setLevel(logging.DEBUG)
+logging.getLogger().addHandler(log_handler)
+logging.getLogger().setLevel(logging.DEBUG)
 
-model_load_start_time = time.time()
+# Removes flask's default logging
+logging.getLogger("werkzeug").setLevel(logging.WARN)
+
 init_clips_models()
-app_logger.info(msg={
-    "func": "model_load_time",
-    "time": time.time() - model_load_start_time
-})
 
 app = Flask(__name__)
 
@@ -33,6 +31,34 @@ app.config["MODELS_METADATA_RESPONSE"] = env.MODELS_METADATA_RESPONSE
 
 app.register_error_handler(401, unauthorized_request_handler)
 app.register_error_handler(400, bad_request_handler)
+
+
+@app.before_request
+def before_request():
+    app_ctx.start_time = time.perf_counter()
+
+
+@app.after_request
+def after_request(response):
+    t = time.perf_counter() - app_ctx.start_time
+    time_in_ms = t * 1000
+
+    ip_addr = request.headers.get('X-Forwarded-For', request.remote_addr)
+
+    current_app.logger.info(msg={
+        "message": "req_resp_info",
+        "time_taken_ms": time_in_ms,
+        "req_headers": dict(request.headers),
+        "ip_addr": ip_addr,
+        "method": request.method,
+        "path": request.full_path,
+        "current_time": datetime.utcnow(),
+        "resp_status": response.status,
+        "resp_headers": dict(response.headers),
+        "args": dict(request.args),
+    })
+
+    return response
 
 
 @app.route("/api/v1/clips/", methods=["GET"])
@@ -50,14 +76,19 @@ def get_recommended_clips():
     try:
         start_time = time.time()
         recommended_clips = get_all_recommended_clips(formatted_user_uid)
-        app_logger.info(msg={
-            "func": "model_exec_time",
-            "time": time.time() - start_time,
+        current_app.logger.info(msg={
+            "func": "get_recommended_clips",
+            "message": "model_exec_time",
+            "time_taken_ms": ((time.time() - start_time) * 1000),
             "clips_length": len(recommended_clips),
             "user_id": user_id
         })
     except Exception as e:
-        app_logger.error(msg=str(e))
+        current_app.logger.error(msg={
+            "func": "get_recommended_clips",
+            "message": str(e),
+            "error": e,
+        })
 
     data = {
         "models_metadata": app.config["MODELS_METADATA_RESPONSE"],
