@@ -3,7 +3,9 @@ Note: Need to have required models in the /recommenders/models/ directory in the
 to run.
 """
 import os
+import time
 import pickle
+import logging
 
 # Todo: Rename me for better context
 G = None
@@ -17,6 +19,8 @@ def get_clip_max_score(clip_uid):
 
 
 def init_clips_models():
+    model_load_start_time = time.time()
+
     global G
     global ScoreMatrix
 
@@ -27,6 +31,12 @@ def init_clips_models():
 
     with open(os.path.join(models_dir, "video_score_matrix.sav"), "rb") as f:
         ScoreMatrix = pickle.load(f)
+
+    logging.info(msg={
+        "func": "init_clips_models",
+        "message": "model_load_time",
+        "time_taken_ms": ((time.time() - model_load_start_time) * 1000),
+    })
 
 
 def get_all_recommended_clips(user_id):
