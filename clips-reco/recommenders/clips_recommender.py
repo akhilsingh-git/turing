@@ -39,19 +39,24 @@ def init_clips_models():
     })
 
 
-def get_all_recommended_clips(user_id):
+def get_all_recommended_clips(formatted_user_uid):
     """
     Recommends the full set of clips for a user present at the time
     the model was trained.
 
     params:
-        user_id | Format: "u_{user_id}"
+        formatted_user_uid -> Format: "u_{user_id}"
     """
     result_clip_to_score_mapping = {}
 
+    # -1 is used for non logged in users
+    # Solves cold start problem
+    if not G.has_node(formatted_user_uid):
+        formatted_user_uid = "u_-1"
+
     # Already watched videos by the user
     # Embedded in the model while training
-    lifetime_watch_history = list(set(G.neighbors(user_id)))
+    lifetime_watch_history = list(set(G.neighbors(formatted_user_uid)))
     lifetime_watch_history.sort(reverse=True, key=get_clip_max_score)
 
     for source_clip_id in lifetime_watch_history[:20]:
