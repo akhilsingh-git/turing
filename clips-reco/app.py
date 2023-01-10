@@ -84,8 +84,9 @@ def get_recommended_clips():
             "user_id": user_id
         })
     except Exception as e:
-        current_app.logger.error(msg={
+        current_app.logger.info(msg={
             "func": "get_recommended_clips",
+            "type": "error",
             "message": str(e),
             "error": e,
         })
