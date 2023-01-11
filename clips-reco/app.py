@@ -99,6 +99,25 @@ def get_recommended_clips():
     return make_response(jsonify(data=data), 200)
 
 
+@app.route("/api/v1/clips/metadata/", methods=["GET"])
+@internal_auth_required
+def get_model_metadata_for_user():
+    query_params = request.args
+    user_id = query_params.get("user_id")
+
+    # Note: user_id is not used as of now.
+    # But since this api is related to thee get clips api,
+    # user_id might be used later on.
+    if user_id is None or len(user_id.strip()) == 0:
+        abort(400, "user_id query param is required!")
+
+    data = {
+        "models_metadata": app.config["MODELS_METADATA_RESPONSE"],
+    }
+
+    return make_response(jsonify(data=data), 200)
+
+
 @app.route("/health/", methods=["GET"])
 def get_health():
     data = {
