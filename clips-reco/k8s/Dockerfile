@@ -50,8 +50,8 @@ WORKDIR /home/loco/turing/
 # TODO: Need to fix aws s3api command doesnt't run after COPY . .
 # This is done so that models_meta does not get replaced by COPY . .
 # But this makes the dockerfile fragile to new changes
-COPY *.py .
-COPY ./middlewares/*.py ./middlewares
+COPY *.py ./
+COPY ./middlewares/*.py ./middlewares/
 COPY ./recommenders/*.py ./recommenders/
 
 EXPOSE 3000
