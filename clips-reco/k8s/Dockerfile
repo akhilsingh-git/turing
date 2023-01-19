@@ -26,19 +26,6 @@ ENV AWS_SECRET_ACCESS_KEY=$aws_access_secret
 ENV LOG_FILE_PATH=/home/loco/logs/turing.log
 
 # -------------------------------------------------------
-# Todo: This is for POC purposes. Needs to be dynamic from S3 head call.
-ENV video_score_matrix_model_date=2023_1_3
-ENV video_score_matrix_model_type=pydict
-ENV video_score_matrix_model_arch=v1
-ENV video_score_matrix_model_archive_name=video_score_matrix-pydict-v1-2023_1_3
-ENV video_score_matrix_model_content=video_score_matrix
-
-ENV watch_history_graph_model_date=2023_1_3
-ENV watch_history_graph_model_type=networkx
-ENV watch_history_graph_model_arch=v1
-ENV watch_history_graph_model_archive_name=watch_history_graph-networkx-v1-2023_1_3
-ENV watch_history_graph_model_content=watch_history_graph
-# -------------------------------------------------------
 
 RUN useradd --create-home --shell /bin/bash loco
 USER loco
@@ -46,18 +33,26 @@ USER loco
 RUN mkdir -p /home/loco/logs/
 RUN touch /home/loco/logs/turing.log
 RUN mkdir -p /home/loco/turing/recommenders/models/
+RUN mkdir -p /home/loco/turing/models_meta/
 
 RUN aws s3 cp s3://loco-ml-models/clips_networkx_models/video_score_matrix/latest.sav /home/loco/turing/recommenders/models/video_score_matrix.sav
 RUN aws s3 cp s3://loco-ml-models/clips_networkx_models/watch_history_graph/latest.sav /home/loco/turing/recommenders/models/watch_history_graph.sav
 
+RUN aws s3api head-object --bucket "loco-ml-models" --key "clips_networkx_models/video_score_matrix/latest.sav" > /home/loco/turing/models_meta/video_score_matrix.json
+RUN aws s3api head-object --bucket "loco-ml-models" --key "clips_networkx_models/watch_history_graph/latest.sav" > /home/loco/turing/models_meta/watch_history_graph.json
+
 # For local testing
 # COPY ./recommenders/models/video_score_matrix.sav /home/loco/turing/recommenders/models/video_score_matrix.sav
-# COPY ./recommenders/models/network_all.sav /home/loco/turing/recommenders/models/watch_history_graph.sav
+# COPY ./recommenders/models/watch_history_graph.sav /home/loco/turing/recommenders/models/watch_history_graph.sav
 
 WORKDIR /home/loco/turing/
-COPY . .
+
+# TODO: Need to fix aws s3api command doesnt't run after COPY . .
+# This is done so that models_meta does not get replaced by COPY . .
+# But this makes the dockerfile fragile to new changes
+COPY *.py ./
+COPY ./middlewares/*.py ./middlewares/
+COPY ./recommenders/*.py ./recommenders/
 
 EXPOSE 3000
 CMD flask run --host 0.0.0.0 --port 3000
-# CMD flask run --port 80
-# entrypoint ["tail", "-f", "/dev/null"]
