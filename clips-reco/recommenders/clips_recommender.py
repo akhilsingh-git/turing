@@ -12,11 +12,12 @@ G = None
 
 # Scores the clip to clip score relation matrix
 ScoreMatrix = None
-allVideoIdList = None
+mixCategoryVideoList = None
 
 
 def get_clip_max_score(clip_uid):
     return ScoreMatrix[clip_uid]["information"]["Maxscore"]
+
 
 def initialiseCatgoryCount():
     """
@@ -60,10 +61,10 @@ def initialiseCatgoryCount():
         '568925': 0,
         '571890': 0,
         '70323': 0
-        
+
     }
     )
- 
+
 
 def init_clips_models():
     model_load_start_time = time.time()
@@ -79,8 +80,44 @@ def init_clips_models():
     with open(os.path.join(models_dir, "video_score_matrix.sav"), "rb") as f:
         ScoreMatrix = pickle.load(f)
 
-    allVideoIdList = list(ScoreMatrix.keys())
-    allVideoIdList.sort(reverse=True, key=get_clip_max_score)
+    all_videoId_list = list(ScoreMatrix.keys())
+    all_videoId_list.sort(reverse=True, key=get_clip_max_score)
+
+    mixCategoryVideoList = {}
+
+    categories = initialiseCatgoryCount()  # stores total video in each category
+    videoInEachCategory = 50
+    countOfCompletedCategories = 0
+
+    max_score_value = len(categories.keys()) * videoInEachCategory
+    instant_score_value = max_score_value
+
+    for video_id in list(all_videoId_list):
+        try:
+            categoryOfVideo = ScoreMatrix[video_id]["information"]["Category"]
+            categories[categoryOfVideo]
+        except:
+            continue
+
+        # checking if all categories are completed
+        if countOfCompletedCategories >= len(categories.keys()):
+            break
+
+        if categories[categoryOfVideo] > videoInEachCategory:
+            continue
+
+        if (categories[categoryOfVideo] == videoInEachCategory):
+            countOfCompletedCategories = countOfCompletedCategories + 1
+
+        categories[categoryOfVideo] = categories[categoryOfVideo] + \
+            1  # increases count of video in category before adding
+
+        if categoryOfVideo == "20097" and categories[categoryOfVideo] < 10:
+            mixCategoryVideoList[video_id] = max_score_value + 1
+            continue
+
+        mixCategoryVideoList[video_id] = instant_score_value
+        instant_score_value = instant_score_value - 1
 
     logging.info(msg={
         "func": "init_clips_models",
@@ -88,41 +125,13 @@ def init_clips_models():
         "time_taken_ms": ((time.time() - model_load_start_time) * 1000),
     })
 
+
 def get_mix_category_recommended_clips_for_new_users():
     """
     Recommends the set of clips for a new user for which model does not have any data
-
-    params:
     """
+    return mixCategoryVideoList
 
-    # Already watched videos by the user
-    # Embedded in the model while training
-    categories= initialiseCatgoryCount() #all category id stores total video in recommendation in each category
-    results = [] #at top have freefire video
-    recommeded_video = []
-    countOfCompletedCategories = 0
-    videoInEachCategory = 50
-    for video_id in list(allVideoIdList):
-        try:
-            categoryOfVideo = ScoreMatrix[video_id]["information"]["Category"]
-            categories[categoryOfVideo]
-        except:
-            continue
-        if(countOfCompletedCategories >= len(categories.keys())):
-            break
-        if(categories[categoryOfVideo]>videoInEachCategory):
-            continue
-        if(categories[categoryOfVideo]==videoInEachCategory):
-            countOfCompletedCategories = countOfCompletedCategories+1
-        categories[categoryOfVideo] = categories[categoryOfVideo]+1
-        if(categoryOfVideo == "20097" and categories[categoryOfVideo] <10):
-            results.append(video_id)
-            continue
-        recommeded_video.append(video_id)
-        
-    results.extend(recommeded_video)
-    
-    return results
 
 def get_all_recommended_clips(formatted_user_uid):
     """
@@ -138,9 +147,9 @@ def get_all_recommended_clips(formatted_user_uid):
     # Solves cold start problem
     if not G.has_node(formatted_user_uid):
         formatted_user_uid = "u_-1"
-        
-    if(formatted_user_uid == "u_-1" ):
-        return(get_mix_category_recommended_clips_for_new_users())
+
+    if (formatted_user_uid == "u_-1"):
+        return (get_mix_category_recommended_clips_for_new_users())
 
     # Already watched videos by the user
     # Embedded in the model while training
@@ -176,7 +185,8 @@ def get_all_recommended_clips(formatted_user_uid):
 
     return final_clips_scores
 
-def get_all_recommended_clips_for_recent_view(formatted_user_uid,recent_watch_history):
+
+def get_all_recommended_clips_for_recent_view(formatted_user_uid, recent_watch_history):
     """
     todo: test it before launch  with ivory 
     Recommends the full set of clips for a user present at the time
@@ -187,8 +197,6 @@ def get_all_recommended_clips_for_recent_view(formatted_user_uid,recent_watch_hi
         recent_watch_history -> list of video_id on january 2023 length of list is 3
     """
     result_clip_to_score_mapping = {}
-
-    
 
     for source_clip_id in recent_watch_history:
         related_score_matrix = ScoreMatrix[source_clip_id]['relation']
