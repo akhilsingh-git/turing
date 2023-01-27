@@ -15,7 +15,7 @@ ScoreMatrix = None
 
 
 def get_clip_max_score(clip_uid):
-    return ScoreMatrix[clip_uid]["Maxscore"]
+    return ScoreMatrix[clip_uid]["information"]["Maxscore"]
 
 
 def init_clips_models():
@@ -60,7 +60,7 @@ def get_all_recommended_clips(formatted_user_uid):
     lifetime_watch_history.sort(reverse=True, key=get_clip_max_score)
 
     for source_clip_id in lifetime_watch_history[:20]:
-        related_score_matrix = ScoreMatrix[source_clip_id]
+        related_score_matrix = ScoreMatrix[source_clip_id]["relation"]
         related_clips_ids = list(related_score_matrix.keys())
 
         for suggested_clip_id in related_clips_ids:
@@ -73,9 +73,6 @@ def get_all_recommended_clips(formatted_user_uid):
 
     for watched_clip in lifetime_watch_history:
         result_clip_to_score_mapping[watched_clip] = -1
-
-    if "Maxscore" in result_clip_to_score_mapping:
-        del result_clip_to_score_mapping["Maxscore"]
 
     results = list(result_clip_to_score_mapping.keys())
 
