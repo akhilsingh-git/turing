@@ -29,7 +29,11 @@ app = Flask(__name__)
 
 app.config["CLIENT_ID"] = env.CLIENT_ID
 app.config["CLIENT_SECRET"] = env.CLIENT_SECRET
-app.config["MODELS_METADATA_RESPONSE"] = env.MODELS_METADATA_RESPONSE
+
+app.config["MODELS_METADATA_RESPONSE"] = {
+    "video_score_matrix": env.get_model_metadata("video_score_matrix"),
+    "watch_history_graph": env.get_model_metadata("watch_history_graph"),
+}
 
 app.register_error_handler(401, unauthorized_request_handler)
 app.register_error_handler(400, bad_request_handler)
