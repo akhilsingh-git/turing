@@ -6,9 +6,10 @@ from pythonjsonlogger import jsonlogger
 from logging.handlers import WatchedFileHandler
 from flask import Flask, current_app, request, jsonify, make_response, abort, g as app_ctx
 
-from recommenders.clips_recommender import init_clips_models, get_all_recommended_clips
+from recommenders.clips_recommender import init_clips_models, get_all_recommended_clips, init_new_users_clips
 from error_handlers import unauthorized_request_handler, bad_request_handler
 from middlewares.auth_middlewares import internal_auth_required
+from helpers import csv_to_list
 
 formatter = jsonlogger.JsonFormatter()
 
@@ -22,6 +23,7 @@ logging.getLogger().setLevel(logging.DEBUG)
 logging.getLogger("werkzeug").setLevel(logging.WARN)
 
 init_clips_models()
+init_new_users_clips()
 
 app = Flask(__name__)
 
@@ -71,6 +73,12 @@ def get_recommended_clips():
     query_params = request.args
     user_id = query_params.get("user_id")
 
+    # Manipulates the api to use a list of clip uids
+    # as watch history for the recommendation. Solves
+    # the cold start problem
+    custom_clips_csv = query_params.get("custom_clips")
+    custom_clips_li = csv_to_list(custom_clips_csv)
+
     if user_id is None or len(user_id.strip()) == 0:
         abort(400, "user_id query param is required!")
 
@@ -79,7 +87,10 @@ def get_recommended_clips():
     recommended_clips = []
     try:
         start_time = time.time()
-        recommended_clips = get_all_recommended_clips(formatted_user_uid)
+        is_generic_suggestion, recommended_clips = get_all_recommended_clips(
+            formatted_user_uid, custom_clips_li,
+        )
+
         current_app.logger.info(msg={
             "func": "get_recommended_clips",
             "message": "model_exec_time",
@@ -97,7 +108,8 @@ def get_recommended_clips():
 
     data = {
         "models_metadata": app.config["MODELS_METADATA_RESPONSE"],
-        "clip_uids": recommended_clips
+        "clip_uids": recommended_clips,
+        "is_generic_suggestion": is_generic_suggestion,
     }
 
     return make_response(jsonify(data=data), 200)
