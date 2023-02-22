@@ -149,7 +149,17 @@ def get_mix_category_recommended_clips(category_id):
 
         return (dict(allCategoryClips))
 
-    return MixedCategoryClips[category_id]
+    sub_feed_of_specified_category = {}
+    try:
+        sub_feed_of_specified_category = MixedCategoryClips[category_id]
+    except Exception as e:
+        logging.error(msg={
+            "func": "get_mix_category_recommended_clips",
+            "message": "sub feed called for unknown category",
+            "e": e,
+        })
+
+    return sub_feed_of_specified_category
 
 # blocks all categories except for  allowed category in recommendation
 
