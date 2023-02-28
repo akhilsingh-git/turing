@@ -136,11 +136,12 @@ def init_new_users_clips():
     })
 
 
-def get_mix_category_recommended_clips(category_id):
+def get_global_recommended_clips_based_on_category(category_id):
     """
     Recommends the set of clips for a new user for which model does not have any data
+    returns clips mixed from all categories if no specific category is provided
     """
-    if (category_id == "all"):
+    if category_id == "":
         all_categories = list(MixedCategoryClips.keys())
 
         allCategoryClips = Counter()
@@ -161,13 +162,15 @@ def get_mix_category_recommended_clips(category_id):
 
     return sub_feed_of_specified_category
 
-# blocks all categories except for  allowed category in recommendation
-
 
 def blocked_category_in_recommendation(allowed_category_of_clip, category_of_clip):
-    if (allowed_category_of_clip == "all" or category_of_clip == allowed_category_of_clip):
-        return 0
-    return 1
+    """
+    blocks all categories except for  allowed category in recommendation
+    """
+    if allowed_category_of_clip == "" or category_of_clip == allowed_category_of_clip:
+        return False
+
+    return True
 
 
 def get_all_recommended_clips(formatted_user_uid, custom_clips_li, category_id):
@@ -186,7 +189,7 @@ def get_all_recommended_clips(formatted_user_uid, custom_clips_li, category_id):
     # serve her the top clips across all categories
     if not G.has_node(formatted_user_uid):
         if custom_clips_li == None or len(custom_clips_li) == 0:
-            return (True, get_mix_category_recommended_clips(category_id))
+            return (True, get_global_recommended_clips_based_on_category(category_id))
         else:
             watch_history = custom_clips_li
     else:
@@ -205,7 +208,7 @@ def get_all_recommended_clips(formatted_user_uid, custom_clips_li, category_id):
 
         for suggested_clip_id in related_clips_ids:
             category_of_clip = ScoreMatrix[suggested_clip_id]["information"]["Category"]
-            if (blocked_category_in_recommendation(category_id, category_of_clip)):
+            if blocked_category_in_recommendation(category_id, category_of_clip):
                 continue
             if suggested_clip_id not in result_clip_to_score_mapping:
                 result_clip_to_score_mapping[suggested_clip_id] = related_score_matrix[suggested_clip_id]
@@ -215,9 +218,11 @@ def get_all_recommended_clips(formatted_user_uid, custom_clips_li, category_id):
             )
 
     for watched_clip in watch_history:
+
         category_of_clip = ScoreMatrix[watched_clip]["information"]["Category"]
-        if (blocked_category_in_recommendation(category_id, category_of_clip)):
+        if blocked_category_in_recommendation(category_id, category_of_clip):
             continue
+
         if watched_clip in result_clip_to_score_mapping:
             result_clip_to_score_mapping[watched_clip] = -1
 
@@ -240,6 +245,7 @@ def get_all_recommended_clips(formatted_user_uid, custom_clips_li, category_id):
     This case will arise in case of categories with very less reach.
     """
     if (len(final_clips_scores) < 10):
-        return (True, get_mix_category_recommended_clips(category_id))
+        # true is being returned specific subfeed
+        return (True, get_global_recommended_clips_based_on_category(category_id))
 
     return (False, final_clips_scores)
