@@ -81,6 +81,8 @@ def get_recommended_clips():
 
     # only single category_id is coming in filter as of now
     filter = query_params.get("filters")
+    if filter == None:
+        filter = ""
 
     if user_id is None or len(user_id.strip()) == 0:
         abort(400, "user_id query param is required!")
