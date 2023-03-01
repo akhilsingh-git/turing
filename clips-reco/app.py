@@ -79,6 +79,9 @@ def get_recommended_clips():
     custom_clips_csv = query_params.get("custom_clips")
     custom_clips_li = csv_to_list(custom_clips_csv)
 
+    # only single category_id is coming in filter as of now
+    filter = query_params.get("filters")
+
     if user_id is None or len(user_id.strip()) == 0:
         abort(400, "user_id query param is required!")
 
@@ -88,7 +91,7 @@ def get_recommended_clips():
     try:
         start_time = time.time()
         is_generic_suggestion, recommended_clips = get_all_recommended_clips(
-            formatted_user_uid, custom_clips_li,
+            formatted_user_uid, custom_clips_li, filter
         )
 
         current_app.logger.info(msg={

@@ -84,6 +84,8 @@ def init_new_users_clips():
     current_score_value = max_score_value
 
     for clip_id in list(all_clips_id_list):
+        # initialising clip category as None
+        category_of_clip = None
         try:
             category_of_clip = ScoreMatrix[clip_id]["information"]["Category"]
             category_to_clips_count_mapping[category_of_clip]
@@ -110,12 +112,20 @@ def init_new_users_clips():
         if category_to_clips_count_mapping[category_of_clip] == max_clips_from_each_category:
             count_of_completed_categories += 1
 
+        # checking if category exists in mixedCategoryClip and adding it if it doesnt exists
+        try:
+            MixedCategoryClips[category_of_clip]
+        except:
+            MixedCategoryClips[category_of_clip] = {}
+
         # Product requirement to priortize freefire clips
         if category_of_clip == "20097" and category_to_clips_count_mapping["20097"] < 10:
-            MixedCategoryClips[clip_id] = max_score_value + 1
+            MixedCategoryClips[category_of_clip][clip_id] = max_score_value + 1
             continue
 
-        MixedCategoryClips[clip_id] = current_score_value
+        MixedCategoryClips[category_of_clip][clip_id] = current_score_value
+
+        # reducing the score for next video to be added
         current_score_value -= 1
 
     logging.info(msg={
@@ -125,14 +135,44 @@ def init_new_users_clips():
     })
 
 
-def get_mix_category_recommended_clips():
+def get_global_recommended_clips_based_on_category(category_id):
     """
     Recommends the set of clips for a new user for which model does not have any data
+    returns clips mixed from all categories if no specific category is provided
     """
-    return MixedCategoryClips
+    if category_id == "":
+        all_categories = list(MixedCategoryClips.keys())
+
+        allCategoryClips = {}
+        for category in all_categories:
+            allCategoryClips.update(MixedCategoryClips[category])
+
+        return (dict(allCategoryClips))
+
+    sub_feed_of_specified_category = {}
+    try:
+        sub_feed_of_specified_category = MixedCategoryClips[category_id]
+    except Exception as e:
+        logging.error(msg={
+            "func": "get_mix_category_recommended_clips",
+            "message": "sub feed called for unknown category",
+            "e": e,
+        })
+
+    return sub_feed_of_specified_category
 
 
-def get_all_recommended_clips(formatted_user_uid, custom_clips_li):
+def blocked_category_in_recommendation(allowed_category_of_clip, category_of_clip):
+    """
+    blocks all categories except for  allowed category in recommendation
+    """
+    if allowed_category_of_clip == "" or category_of_clip == allowed_category_of_clip:
+        return False
+
+    return True
+
+
+def get_all_recommended_clips(formatted_user_uid, custom_clips_li, category_id):
     """
     Recommends the full set of clips for a user present at the time
     the model was trained.
@@ -148,7 +188,7 @@ def get_all_recommended_clips(formatted_user_uid, custom_clips_li):
     # serve her the top clips across all categories
     if not G.has_node(formatted_user_uid):
         if custom_clips_li == None or len(custom_clips_li) == 0:
-            return (True, get_mix_category_recommended_clips())
+            return (True, get_global_recommended_clips_based_on_category(category_id))
         else:
             watch_history = custom_clips_li
     else:
@@ -166,6 +206,10 @@ def get_all_recommended_clips(formatted_user_uid, custom_clips_li):
         related_clips_ids = list(related_score_matrix.keys())
 
         for suggested_clip_id in related_clips_ids:
+            category_of_clip = ScoreMatrix[suggested_clip_id]["information"]["Category"]
+            if blocked_category_in_recommendation(category_id, category_of_clip):
+                continue
+
             if suggested_clip_id not in result_clip_to_score_mapping:
                 result_clip_to_score_mapping[suggested_clip_id] = related_score_matrix[suggested_clip_id]
 
@@ -174,6 +218,8 @@ def get_all_recommended_clips(formatted_user_uid, custom_clips_li):
             )
 
     for watched_clip in watch_history:
+
+        category_of_clip = ScoreMatrix[watched_clip]["information"]["Category"]
         if watched_clip in result_clip_to_score_mapping:
             result_clip_to_score_mapping[watched_clip] = -1
 
@@ -188,5 +234,15 @@ def get_all_recommended_clips(formatted_user_uid, custom_clips_li):
     final_clips_scores = {}
     for clip_uid in results:
         final_clips_scores[clip_uid] = result_clip_to_score_mapping[clip_uid]
+
+    """
+    In case of specific category we might not have any video in relation to prev watched video
+    for that category to handle that case we will return default feed for new users
+    taking cutoff as 10 as we will need minimum 10 vid in our recommedation to show to user
+    This case will arise in case of categories with very less reach.
+    """
+    if (len(final_clips_scores) < 10):
+        # todo: discuss if we have to implement recommendation based on recency for next call
+        return (False, get_global_recommended_clips_based_on_category(category_id))
 
     return (False, final_clips_scores)
