@@ -6,7 +6,6 @@ import os
 import time
 import pickle
 import logging
-from collections import Counter
 
 # Todo: Rename me for better context
 G = None
@@ -144,9 +143,9 @@ def get_global_recommended_clips_based_on_category(category_id):
     if category_id == "":
         all_categories = list(MixedCategoryClips.keys())
 
-        allCategoryClips = Counter()
+        allCategoryClips = {}
         for category in all_categories:
-            allCategoryClips += Counter(MixedCategoryClips[category])
+            allCategoryClips.update(MixedCategoryClips[category])
 
         return (dict(allCategoryClips))
 
@@ -210,6 +209,7 @@ def get_all_recommended_clips(formatted_user_uid, custom_clips_li, category_id):
             category_of_clip = ScoreMatrix[suggested_clip_id]["information"]["Category"]
             if blocked_category_in_recommendation(category_id, category_of_clip):
                 continue
+
             if suggested_clip_id not in result_clip_to_score_mapping:
                 result_clip_to_score_mapping[suggested_clip_id] = related_score_matrix[suggested_clip_id]
 
@@ -220,9 +220,6 @@ def get_all_recommended_clips(formatted_user_uid, custom_clips_li, category_id):
     for watched_clip in watch_history:
 
         category_of_clip = ScoreMatrix[watched_clip]["information"]["Category"]
-        if blocked_category_in_recommendation(category_id, category_of_clip):
-            continue
-
         if watched_clip in result_clip_to_score_mapping:
             result_clip_to_score_mapping[watched_clip] = -1
 
@@ -245,7 +242,7 @@ def get_all_recommended_clips(formatted_user_uid, custom_clips_li, category_id):
     This case will arise in case of categories with very less reach.
     """
     if (len(final_clips_scores) < 10):
-        # true is being returned specific subfeed
-        return (True, get_global_recommended_clips_based_on_category(category_id))
+        # todo: discuss if we have to implement recommendation based on recency for next call
+        return (False, get_global_recommended_clips_based_on_category(category_id))
 
     return (False, final_clips_scores)
